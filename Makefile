@@ -2,7 +2,7 @@
 VENV_DIR = venv
 REQUIREMENTS = requirements.txt
 PYTHON = python3
-
+SRC_DIR = src
 # Default target
 all: venv install
 
@@ -15,6 +15,12 @@ venv:
 install: venv
 	@echo "Activating virtual environment and installing requirements..."
 	@$(VENV_DIR)/bin/pip install -r $(REQUIREMENTS)
+
+lint:
+	echo 'Start formatting...'
+	@ruff format $(SRC_DIR) 
+	echo 'Start linting...'
+	@ruff check --fix $(SRC_DIR)
 
 # Target to clean the virtual environment
 clean:
