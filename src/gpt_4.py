@@ -1,10 +1,13 @@
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
 from typing import List
+
+load_dotenv()
 
 MODEL = "gpt-4o"
 API_KEY = os.getenv("OPENAI_API_KEY", "<your OpenAI API key if not set as an env var>")
-
+print(API_KEY)
 if not API_KEY:
     raise ValueError(
         "API key for OpenAI is not provided. Please set the OPENAI_API_KEY environment variable."
