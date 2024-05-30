@@ -1,15 +1,35 @@
 from openai.types.images_response import Image
 from openai import OpenAI
+import base64
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 client = OpenAI()
 
 
 def get_gpt4_response(prompt) -> Image:
     response = client.images.generate(
-        model="dall-e-3", prompt=prompt, n=1, size="1024x1024"
+        model="dall-e-3",
+        prompt=prompt,
+        n=1,
+        size="1024x1024",
+        response_format="b64_json",
     )
+    # Extract the base64 image data from the response
+    image_data = response.data[0].b64_json
 
-    # Check if the request was successful
+    # Decode the base64 data
+    image_binary = base64.b64decode(image_data)
+    # Define the specific directory and file name where you want to save the image
+    directory = "./outputs/images"
+    file_name = "output_image.png"
+    output_path = os.path.join(directory, file_name)
+    # Save the image binary data to the specified file
+    with open(output_path, "wb") as image_file:
+        image_file.write(image_binary)
+
+    print(f"Image saved to {output_path}")
     return response.data[0]
 
 
@@ -28,7 +48,6 @@ def main():
         # Add GPT-4's response to the conversation history
         conversation_history.append(f"GPT-4: {gpt4_response}")
         print(f"GPT-4: {gpt4_response.revised_prompt}")
-        print(f"URL: {gpt4_response.url}")
 
 
 if __name__ == "__main__":
