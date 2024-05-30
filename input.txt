@@ -1,0 +1,46 @@
+Improve below code
+
+import os
+from openai import OpenAI
+
+MODEL = "gpt-4o"
+API_KEY = os.getenv("OPENAI_API_KEY", "<your OpenAI API key if not set as an env var>")
+client = OpenAI(api_key=API_KEY)
+
+def get_gpt4_response(prompt, client, model=MODEL):
+    completion = client.chat.completions.create(
+        model=model, messages=[{"role": "user", "content": prompt}]
+    )
+    return completion.choices[0].message.content
+
+def read_input_from_file(filename='input.txt'):
+    with open(filename, 'r') as file:
+        return file.read().strip()
+
+def main():
+    conversation_history = []
+    print("Welcome to the GPT-4 chatbot! Type 'exit' to end the conversation.")
+
+    while True:
+        user_input = input("You: ").strip()
+        
+        if not user_input:
+            print("No input provided. Reading from file.")
+            user_input = read_input_from_file()
+        
+        if user_input.lower() == "exit":
+            print("Goodbye!")
+            break
+        
+        conversation_history.append(f"You: {user_input}")
+        
+        # Construct the prompt with context
+        prompt = "\n".join(conversation_history) + "\nGPT-4:"
+        gpt4_response = get_gpt4_response(prompt, client)
+        
+        # Add GPT-4's response to the conversation history
+        conversation_history.append(f"GPT-4: {gpt4_response}")
+        print(f"GPT-4: {gpt4_response}")
+
+if __name__ == "__main__":
+    main()
