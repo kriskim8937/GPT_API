@@ -16,7 +16,7 @@ if not API_KEY:
 client = OpenAI(api_key=API_KEY)
 
 
-def get_gpt4_response(prompt: str, client: OpenAI, model: str = MODEL) -> str:
+def get_gpt4_response(prompt: str, client: OpenAI = client, model: str = MODEL) -> str:
     completion = client.chat.completions.create(
         model=model, messages=[{"role": "user", "content": prompt}]
     )
@@ -25,7 +25,7 @@ def get_gpt4_response(prompt: str, client: OpenAI, model: str = MODEL) -> str:
 
 def read_input_from_file(filename: str = "input.txt") -> str:
     try:
-        with open(filename, "r", encoding='utf-8') as file:
+        with open(filename, "r", encoding="utf-8") as file:
             return file.read().strip()
     except FileNotFoundError:
         print(f"File '{filename}' not found.")

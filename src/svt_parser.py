@@ -1,7 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
+from dataclasses import dataclass
 
-def get_latest_news() -> list:
+
+@dataclass
+class News:
+    title: str
+    content: str
+    link: str
+
+
+def get_news_links() -> list:
     """Fetches the latest inrikes news links from the SVT website."""
 
     base_url = "https://www.svt.se"
@@ -16,35 +25,40 @@ def get_latest_news() -> list:
         return []
 
     # Parse the HTML content
-    soup = BeautifulSoup(response.content, 'html.parser')
+    soup = BeautifulSoup(response.content, "html.parser")
 
     # Find and filter all relevant links
-    links = soup.find_all('a', href=True)
+    links = soup.find_all("a", href=True)
     filtered_links = [
-        base_url + link['href'] for link in links
-        if link['href'].startswith(postfix)
-        and len(link['href'].split('/')) == 4
-        and link['href'].split('/')[3]
-        and not link['href'].split('/')[3].startswith("?")
+        base_url + link["href"]
+        for link in links
+        if link["href"].startswith(postfix)
+        and len(link["href"].split("/")) == 4
+        and link["href"].split("/")[3]
+        and not link["href"].split("/")[3].startswith("?")
     ]
 
     return filtered_links
 
-if __name__ == "__main__":
-    latest_news = get_latest_news()
-    url = latest_news[0]
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
+
+def get_news():
+    news = []
+    news_links = get_news_links()
+    for news_link in news_links:
+        title, content = get_title_and_content(news_link)
+        news.append(News(title, content, news_link))
+    return news
+
+
+def get_title_and_content(news_links):
+    response = requests.get(news_links)
+    soup = BeautifulSoup(response.text, "html.parser")
 
     # Get the title
     title = soup.title.string
-
     # Get the contents (e.g., paragraphs)
     contents = []
-    for paragraph in soup.find_all('p'):
+    for paragraph in soup.find_all("p"):
         contents.append(paragraph.text)
-
-    print("Title:", title)
-    print("\nContents:")
-    for content in contents:
-        print(content)
+    content = "\n".join(contents)
+    return title, content
