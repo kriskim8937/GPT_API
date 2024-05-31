@@ -25,7 +25,7 @@ def get_gpt4_response(prompt: str, client: OpenAI, model: str = MODEL) -> str:
 
 def read_input_from_file(filename: str = "input.txt") -> str:
     try:
-        with open(filename, "r") as file:
+        with open(filename, "r", encoding='utf-8') as file:
             return file.read().strip()
     except FileNotFoundError:
         print(f"File '{filename}' not found.")
