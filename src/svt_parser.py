@@ -1,13 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
-
+from typing import List
 
 @dataclass
 class News:
     title: str
     content: str
     link: str
+    def __post_init__(self):
+        if self.title.endswith(" | SVT Nyheter"):
+            self.title = self.title[:-len(" | SVT Nyheter")]
 
 
 def get_news_links() -> list:
@@ -41,12 +44,13 @@ def get_news_links() -> list:
     return filtered_links
 
 
-def get_news():
+def get_news() -> List[News]:
     news = []
     news_links = get_news_links()
     for news_link in news_links:
-        title, content = get_title_and_content(news_link)
-        news.append(News(title, content, news_link))
+        if "nattens-nyheter" not in news_link:
+            title, content = get_title_and_content(news_link)
+            news.append(News(title, content, news_link))
     return news
 
 
@@ -56,9 +60,19 @@ def get_title_and_content(news_links):
 
     # Get the title
     title = soup.title.string
-    # Get the contents (e.g., paragraphs)
+
+    # Get the contents (e.g., paragraphs, h2, and li) in order
     contents = []
-    for paragraph in soup.find_all("p"):
-        contents.append(paragraph.text)
+
+    for tag in soup.find_all(["p", "h2", "li"]):
+        if tag.name == "p":
+            contents.append(tag.text)
+        elif tag.name == "h2":
+            contents.append(tag.text)
+        elif tag.name == "li":
+            contents.append(tag.text)
+
+    # Combine all the contents into a single string
     content = "\n".join(contents)
+
     return title, content

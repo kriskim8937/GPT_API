@@ -24,3 +24,4 @@ def generate_audio(script):
         input=script,
     )
     response.stream_to_file(output_path)
+    return output_path

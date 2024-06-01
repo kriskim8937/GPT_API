@@ -2,6 +2,7 @@ from openai.types.images_response import Image
 from openai import OpenAI
 import base64
 import os
+from gpt_4 import get_gpt4_response
 from dotenv import load_dotenv
 from common import ensure_directory_exists, get_current_datetime_str
 
@@ -40,11 +41,31 @@ def get_dall_e_3_response(prompt: str) -> Image:
         # Save the image
         save_image(image_data, output_path)
 
-        return output_path
+        return response.data[0], output_path
     except Exception as e:
         print(f"An error occurred: {e}")
-        return None
+        return None, None
 
+def get_non_sensitive_prompt(prompt):
+    prompt = "Remove sensitive words from below sentence:\n\n" + prompt
+    return get_gpt4_response(prompt)
+
+class DallE3:
+    conversation_history = []
+    def save_image(self, input):
+        self.conversation_history.append(f"You: {input}")
+        prompt = "\n".join(self.conversation_history)
+        response, output_dir = get_dall_e_3_response(prompt)
+        while not response:
+            input = get_non_sensitive_prompt(input)
+            print("non-sensitive-prompt: ", input)
+            self.conversation_history = self.conversation_history[:-1]
+            self.conversation_history.append(f"You: {input}")
+            prompt = "\n".join(self.conversation_history)
+            response, output_dir = get_dall_e_3_response(prompt)
+        self.conversation_history.append(f"GPT-4: {response.revised_prompt}")
+        print(f"GPT-4: {response.revised_prompt}")
+        return output_dir
 
 def main() -> None:
     conversation_history = []
@@ -58,7 +79,7 @@ def main() -> None:
         conversation_history.append(f"You: {user_input}")
         prompt = "\n".join(conversation_history)
 
-        gpt4_response = get_dall_e_3_response(prompt)
+        gpt4_response, _ = get_dall_e_3_response(prompt)
         if gpt4_response:
             # Add GPT-4's response to the conversation history
             conversation_history.append(f"GPT-4: {gpt4_response.revised_prompt}")
