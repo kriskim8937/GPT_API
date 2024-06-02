@@ -23,6 +23,7 @@ def get_dall_e_3_response(prompt: str) -> Image:
             model="dall-e-3",
             prompt=prompt,
             n=1,
+            quality="standard",
             size="1024x1024",
             response_format="b64_json",
         )

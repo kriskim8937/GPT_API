@@ -69,76 +69,55 @@ def main():
         new_title = get_new_title(news.title, updated_content)
         print("new_title: ", new_title)
         print("updated_news: ", updated_content)
-        audio_path = generate_audio(updated_content)
-        create_video_from_text(updated_content, audio_path, new_title)
-        process_news(news.title)
+        sentences = updated_content.split(". ")
+        dall_e_3_client = DallE3()
+        final_clips = []
+        for idx, sentence in enumerate(sentences):
+            audio_output_path = f"./outputs/audios/{new_title}_{idx}.mp3"
+            # if os.path.exists(audio_output_path):
+            #     print(f"Audio:{audio_output_path} already exists")
+            generate_audio(sentence, audio_output_path)
+            image_output_path = f"./outputs/images/{new_title}_{idx}.png"
+            if os.path.exists(image_output_path):
+                print(f"Image:{image_output_path} already exists")
+            else:
+                response = dall_e_3_client.get_image_data(sentence)
+                image_data = response.b64_json
+                save_image(image_data, image_output_path)
+            audio_clip = AudioFileClip(audio_output_path)
+            image_clip = ImageClip(image_output_path).set_duration(audio_clip.duration)
+            title_clip = TextClip(
+                new_title,
+                fontsize=60,
+                color="white",
+                bg_color="black",
+                font="Malgun-Gothic-Bold",
+                size=(1024, 100),
+            ).set_duration(audio_clip.duration)
+            title_clip = title_clip.set_position(("center", "top"))
+            subtitle_clip = TextClip(sentence + ".", fontsize=24, color='white', bg_color='black', font="Malgun-Gothic").set_duration(audio_clip.duration)
+            subtitle_clip = subtitle_clip.set_pos('bottom')
+            # Set audio to image clip
+            video_clip = image_clip.set_audio(audio_clip)
+            # Overlay subtitle on video
+            video_clip = CompositeVideoClip([video_clip, title_clip, subtitle_clip])
+            # Write individual clip to file
+            video_output_path = f"./outputs/videos/{new_title}_{idx}.mp4"
+            video_clip.write_videofile(video_output_path, fps=24)
+            # Append to final clips list
+            final_clips.append(video_clip)
+        # Concatenate all individual clips
+        merged_clip = concatenate_videoclips(final_clips)
+
+        # Write the final merged video to a file
+        merged_clip.write_videofile(f"outputs/videos/{new_title}.mp4", fps=24)
+        break
+        #process_news(news.title)
 
 
 def read_unprocessed_news():
     query = "SELECT title, url FROM svt_news WHERE processed = 0"
     return [News(title, "", url) for title, url in execute_query(query)]
-
-
-def create_video_from_text(text, audio_path, new_title):
-    """
-    Create a video from text by combining audio and images.
-
-    Args:
-        text (str): The text to be converted into a video.
-        audio_path (str): The path to the audio file.
-        new_title (str): The title of the video.
-
-    Returns:
-        None
-    """
-    # Create audio
-    audio_clip = AudioFileClip(audio_path)
-
-    # Create title text clip
-    title_clip = TextClip(
-        new_title,
-        fontsize=60,
-        color="white",
-        bg_color="black",
-        font="Malgun-Gothic-Bold",
-        size=(1024, 100),
-    ).set_duration(audio_clip.duration)
-    title_clip = title_clip.set_position(("center", "top"))
-
-    # Split text for each image (assuming each image holds one sentence for simplicity)
-    sentences = text.split(". ")
-    image_files = []
-    clips = []
-    dall_e_3_client = DallE3()
-
-    for i, sentence in enumerate(sentences):
-        output_path = f"./outputs/images/{new_title}_{i}.png"
-        if os.path.exists(output_path):
-            print(f"Image:{output_path} already exists")
-        else:
-            response = dall_e_3_client.get_image_data(sentence)
-            # Extract the base64 image data from the response
-            image_data = response.b64_json
-            save_image(image_data, output_path)
-            print(output_path)
-        image_files.append(output_path)
-        image_clip = ImageClip(output_path).set_duration(
-            audio_clip.duration / len(sentences)
-        )
-        clips.append(image_clip)
-
-    # Concatenate all image clips
-    final_clip = concatenate_videoclips(clips, method="compose")
-
-    # Add title text clip to the video
-    final_clip_with_title = CompositeVideoClip([final_clip, title_clip])
-
-    # Combine audio and video with title
-    final_video = final_clip_with_title.set_audio(audio_clip)
-
-    # Write the final video file
-    final_video.write_videofile(f"outputs/videos/{new_title}.mp4", fps=24)
-
 
 if __name__ == "__main__":
     main()
