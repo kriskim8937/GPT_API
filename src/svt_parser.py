@@ -3,14 +3,16 @@ from bs4 import BeautifulSoup
 from dataclasses import dataclass
 from typing import List
 
+
 @dataclass
 class News:
     title: str
     content: str
     link: str
+
     def __post_init__(self):
         if self.title.endswith(" | SVT Nyheter"):
-            self.title = self.title[:-len(" | SVT Nyheter")]
+            self.title = self.title[: -len(" | SVT Nyheter")]
 
 
 def get_news_links() -> list:
@@ -53,6 +55,7 @@ def get_news() -> List[News]:
             news.append(News(title, content, news_link))
     return news
 
+
 def get_news_titles_and_urls() -> List[News]:
     news = []
     news_links = get_news_links()
@@ -61,6 +64,7 @@ def get_news_titles_and_urls() -> List[News]:
             title = get_title(news_link)
             news.append(News(title, "", news_link))
     return news
+
 
 def get_content(news_link):
     response = requests.get(news_link)
@@ -77,6 +81,7 @@ def get_content(news_link):
     # Combine all the contents into a single string
     content = "\n".join(contents)
     return content
+
 
 def get_title_and_content(news_link):
     response = requests.get(news_link)
@@ -100,6 +105,7 @@ def get_title_and_content(news_link):
     content = "\n".join(contents)
 
     return title, content
+
 
 def get_title(news_link):
     response = requests.get(news_link)

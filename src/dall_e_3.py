@@ -26,21 +26,6 @@ def get_dall_e_3_response(prompt: str) -> Image:
             size="1024x1024",
             response_format="b64_json",
         )
-        # Extract the base64 image data from the response
-        #image_data = response.data[0].b64_json
-
-        # # Ensure the output directory exists
-        # output_dir = "./outputs/images"
-        # ensure_directory_exists(output_dir)
-
-        # # Define the file name and path
-        # current_datetime_str = get_current_datetime_str()
-        # file_name = f"image_{current_datetime_str}.png"
-        # output_path = os.path.join(output_dir, file_name)
-
-        # Save the image
-        # save_image(image_data, output_path)
-
         return response.data[0]
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -51,9 +36,9 @@ def get_non_sensitive_prompt(prompt):
     return get_gpt4_response(prompt)
 
 class DallE3:
-    conversation_history = []
     def get_image_data(self, input_text):
-        self.conversation_history.append(f"You: {input_text}.")
+        self.conversation_history = []
+        self.conversation_history.append(f"You: {input_text}. Don't put numbers on the image.")
         prompt = "\n".join(self.conversation_history)
         response = get_dall_e_3_response(prompt)
         while not response:
@@ -62,6 +47,7 @@ class DallE3:
             self.conversation_history = self.conversation_history[:-1]
             self.conversation_history.append(f"You: {input_text}")
             prompt = "\n".join(self.conversation_history)
+            print(prompt)
             response = get_dall_e_3_response(prompt)
         self.conversation_history.append(f"GPT-4: {response.revised_prompt}")
         print(f"GPT-4: {response.revised_prompt}")
@@ -79,8 +65,9 @@ def main() -> None:
         conversation_history.append(f"You: {user_input}")
         prompt = "\n".join(conversation_history)
 
-        gpt4_response, _ = get_dall_e_3_response(prompt)
+        gpt4_response = get_dall_e_3_response(prompt)
         if gpt4_response:
+            save_image(gpt4_response.b64_json, f"outputs/images/image_{get_current_datetime_str()}.png")
             # Add GPT-4's response to the conversation history
             conversation_history.append(f"GPT-4: {gpt4_response.revised_prompt}")
             print(f"GPT-4: {gpt4_response.revised_prompt}")
