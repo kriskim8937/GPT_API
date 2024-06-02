@@ -27,24 +27,24 @@ def get_dall_e_3_response(prompt: str) -> Image:
             response_format="b64_json",
         )
         # Extract the base64 image data from the response
-        image_data = response.data[0].b64_json
+        #image_data = response.data[0].b64_json
 
-        # Ensure the output directory exists
-        output_dir = "./outputs/images"
-        ensure_directory_exists(output_dir)
+        # # Ensure the output directory exists
+        # output_dir = "./outputs/images"
+        # ensure_directory_exists(output_dir)
 
-        # Define the file name and path
-        current_datetime_str = get_current_datetime_str()
-        file_name = f"image_{current_datetime_str}.png"
-        output_path = os.path.join(output_dir, file_name)
+        # # Define the file name and path
+        # current_datetime_str = get_current_datetime_str()
+        # file_name = f"image_{current_datetime_str}.png"
+        # output_path = os.path.join(output_dir, file_name)
 
         # Save the image
-        save_image(image_data, output_path)
+        # save_image(image_data, output_path)
 
-        return response.data[0], output_path
+        return response.data[0]
     except Exception as e:
         print(f"An error occurred: {e}")
-        return None, None
+        return None
 
 def get_non_sensitive_prompt(prompt):
     prompt = "Remove sensitive words from below sentence:\n\n" + prompt
@@ -52,20 +52,20 @@ def get_non_sensitive_prompt(prompt):
 
 class DallE3:
     conversation_history = []
-    def save_image(self, input):
-        self.conversation_history.append(f"You: {input}")
+    def get_image_data(self, input_text):
+        self.conversation_history.append(f"You: {input_text}.")
         prompt = "\n".join(self.conversation_history)
-        response, output_dir = get_dall_e_3_response(prompt)
+        response = get_dall_e_3_response(prompt)
         while not response:
-            input = get_non_sensitive_prompt(input)
-            print("non-sensitive-prompt: ", input)
+            input_text = get_non_sensitive_prompt(input_text)
+            print("non-sensitive-prompt: ", input_text)
             self.conversation_history = self.conversation_history[:-1]
-            self.conversation_history.append(f"You: {input}")
+            self.conversation_history.append(f"You: {input_text}")
             prompt = "\n".join(self.conversation_history)
-            response, output_dir = get_dall_e_3_response(prompt)
+            response = get_dall_e_3_response(prompt)
         self.conversation_history.append(f"GPT-4: {response.revised_prompt}")
         print(f"GPT-4: {response.revised_prompt}")
-        return output_dir
+        return response
 
 def main() -> None:
     conversation_history = []

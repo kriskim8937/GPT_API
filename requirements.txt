@@ -3,3 +3,4 @@ requests
 openai
 ruff
 bs4
+markdown

@@ -1,7 +1,7 @@
 from gpt_4 import get_gpt4_response
-from dall_e_3 import get_dall_e_3_response, DallE3
+from dall_e_3 import get_dall_e_3_response, DallE3, save_image
 from tts_1 import generate_audio
-from svt_parser import get_news
+from svt_parser import get_news, News, get_news_titles_and_urls, get_content
 from moviepy.editor import (
     ImageClip,
     concatenate_videoclips,
@@ -9,6 +9,7 @@ from moviepy.editor import (
     TextClip,
     CompositeVideoClip
 )
+from models import news_exists, add_news, get_all_news, news_is_processed, process_news, execute_query
 import os
 os.environ['IMAGEMAGICK_BINARY'] = 'C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe'  # Update the path accordingly
 
@@ -17,9 +18,20 @@ def translate_and_summarize(news):
     return get_gpt4_response(prompt)
 
 
-def get_new_title(updated_news):
-    prompt = f"Generate a title of the below news in Korean in one sentence. Should be less then 20 characters:\n\n{updated_news}"
-    return get_gpt4_response(prompt)
+def get_new_title(title, updated_news):
+    select_query = '''
+    SELECT new_title
+    FROM svt_news
+    WHERE title = ?;
+    '''
+    new_title = execute_query(select_query, (title,))
+    if new_title:
+        new_title = new_title[0][0]
+    print(new_title)
+    if not new_title :
+        prompt = f"Generate a title of the below news in Korean in one sentence. Should be less then 20 characters:\n\n{updated_news}"
+        new_title = get_gpt4_response(prompt)
+    return new_title
 
 
 def get_revised_prompt(prompt):
@@ -28,16 +40,28 @@ def get_revised_prompt(prompt):
 
 
 def main():
-    news_list = get_news()
-    for i in news_list :
-        print(i.title)
-        print(i.link)
-    # updated_news = translate_and_summarize(news_list[0])
-    # new_title = get_new_title(updated_news)
-    # print("new_title: ", new_title)
-    # print("updated_news: ", updated_news)
-    # audio_path = generate_audio(updated_news)
-    # create_video_from_text(updated_news, audio_path, new_title)
+    news_list = get_news_titles_and_urls()
+    for news in news_list :
+        if news_exists(news.title):
+            print(f"This news({news.title}) already registered in db")
+        else :
+            add_news(news.title, news.link)
+            print(f"{news.title} added")
+    for news in read_unprocessed_news():
+        print(f"Start to process news({news.title})")
+        raw_content = get_content(news.link)
+        news.content = raw_content
+        updated_content = translate_and_summarize(news)
+        new_title = get_new_title(news.title, updated_content)
+        print("new_title: ", new_title)
+        print("updated_news: ", updated_content)
+        audio_path = generate_audio(updated_content)
+        create_video_from_text(updated_content, audio_path, new_title)
+        process_news(news.title)
+
+def read_unprocessed_news():
+    query = 'SELECT title, url FROM svt_news WHERE processed = 1'
+    return [News(title, "", url) for title, url in execute_query(query)]
 
 
 def create_video_from_text(text, audio_path, new_title):
@@ -45,7 +69,7 @@ def create_video_from_text(text, audio_path, new_title):
     audio_clip = AudioFileClip(audio_path)
 
     # Create title text clip
-    title_clip = TextClip(new_title, fontsize=70, color='white', bg_color='white', font='NanumGothic', size=(1920, 100)).set_duration(audio_clip.duration)
+    title_clip = TextClip(new_title, fontsize=70, color='white', bg_color='black', font='NanumGothic', size=(1920, 100)).set_duration(audio_clip.duration)
     title_clip = title_clip.set_position(('center', 'top'))
 
     # Split text for each image (assuming each image holds one sentence for simplicity)
@@ -55,11 +79,17 @@ def create_video_from_text(text, audio_path, new_title):
     dall_e_3_client = DallE3()
 
     for i, sentence in enumerate(sentences):
-        image_path = dall_e_3_client.save_image(sentence)
-        print(image_path)
-        image_files.append(image_path)
-
-        image_clip = ImageClip(image_path).set_duration(
+        output_path = f'./outputs/images/{new_title}_{i}.png'
+        if os.path.exists(output_path):
+            print(f"Image:{output_path} already exists")
+        else:
+            response = dall_e_3_client.get_image_data(sentence)
+            #Extract the base64 image data from the response
+            image_data = response.b64_json
+            save_image(image_data, output_path)
+            print(output_path)
+        image_files.append(output_path)
+        image_clip = ImageClip(output_path).set_duration(
             audio_clip.duration / len(sentences)
         )
         clips.append(image_clip)

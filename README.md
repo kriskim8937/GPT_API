@@ -24,6 +24,30 @@ Ensure you have the following installed:
 - pip (Python package installer)
 - Git (for cloning the repository)
 
+### Project structure
+your_project/
+│
+├── data/
+│   ├── migrations/
+│   └── example.db  # SQLite database file
+│
+├── your_project/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── models.py
+│   ├── db.py
+│   ├── main.py
+│   └── utils.py
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_db.py
+│   └── test_models.py
+│
+├── .gitignore
+├── requirements.txt
+└── README.md
+
 ### Steps
 
 1. **Clone the repository:**

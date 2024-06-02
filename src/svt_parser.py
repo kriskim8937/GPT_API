@@ -53,9 +53,33 @@ def get_news() -> List[News]:
             news.append(News(title, content, news_link))
     return news
 
+def get_news_titles_and_urls() -> List[News]:
+    news = []
+    news_links = get_news_links()
+    for news_link in news_links:
+        if "nattens-nyheter" not in news_link:
+            title = get_title(news_link)
+            news.append(News(title, "", news_link))
+    return news
 
-def get_title_and_content(news_links):
-    response = requests.get(news_links)
+def get_content(news_link):
+    response = requests.get(news_link)
+    soup = BeautifulSoup(response.text, "html.parser")
+    # Get the contents (e.g., paragraphs, h2, and li) in order
+    contents = []
+    for tag in soup.find_all(["p", "h2", "li"]):
+        if tag.name == "p":
+            contents.append(tag.text)
+        elif tag.name == "h2":
+            contents.append(tag.text)
+        elif tag.name == "li":
+            contents.append(tag.text)
+    # Combine all the contents into a single string
+    content = "\n".join(contents)
+    return content
+
+def get_title_and_content(news_link):
+    response = requests.get(news_link)
     soup = BeautifulSoup(response.text, "html.parser")
 
     # Get the title
@@ -76,3 +100,10 @@ def get_title_and_content(news_links):
     content = "\n".join(contents)
 
     return title, content
+
+def get_title(news_link):
+    response = requests.get(news_link)
+    soup = BeautifulSoup(response.text, "html.parser")
+    # Get the title
+    title = soup.title.string
+    return title
