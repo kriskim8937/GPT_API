@@ -92,7 +92,8 @@ def read_unprocessed_news():
     Returns:
     list: List of unprocessed news objects.
     """
-    query = "SELECT title, url FROM svt_news WHERE processed = 0"
+    #query = "SELECT title, url FROM svt_news WHERE status IS NULL;"
+    query = "SELECT title, url FROM svt_news WHERE date = '2024-06-05';"
     return [News(title, "", url) for title, url in execute_query(query)]
 
 
@@ -119,7 +120,12 @@ def main():
 
         print("new_title: ", new_title)
         print("updated_news: ", updated_content)
-
+        user_input = input("Do you want to progress? (y/n): ")
+        if user_input.lower() == 'y':
+            print("Progressing...")
+        else:
+            print("Continuing...")
+            continue
         sentences = updated_content.split(". ")
         dall_e_3_client = DallE3()
         final_clips = []

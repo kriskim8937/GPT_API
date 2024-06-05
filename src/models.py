@@ -40,6 +40,14 @@ def get_all_news():
     conn.close()
     return rows
 
+def get_url(new_title):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT url FROM svt_news where new_title = ?", (new_title,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows[0][0]
+
 
 def execute_query(query, param=None):
     conn = get_connection()
@@ -57,18 +65,6 @@ def execute_query(query, param=None):
 def process_news(title):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE svt_news SET processed = 1 WHERE title = ?", (title,))
+    cursor.execute("UPDATE svt_news SET status = 'video_generated' WHERE title = ?", (title,))
     conn.commit()
     conn.close()
-
-
-def news_is_processed(title):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT processed FROM svt_news WHERE title = ?", (title,))
-    result = cursor.fetchone()
-    conn.close()
-    if result:
-        return bool(result[0])  # Convert the result to a boolean value
-    else:
-        return False
