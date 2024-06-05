@@ -4,3 +4,4 @@ openai
 ruff
 bs4
 markdown
+google-api-python-client
