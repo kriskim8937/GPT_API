@@ -13,12 +13,12 @@ from moviepy.editor import (
 from models import (
     news_exists,
     add_news,
-    process_news,
+    set_status_to_video_generated,
     execute_query,
 )
 
 
-def translate_and_summarize(news):
+def translate_and_summarize(title, content):
     """
     Translates and summarizes the news content into Korean with honorifics in less than 290 characters. 
 
@@ -28,13 +28,12 @@ def translate_and_summarize(news):
     Returns:
     str: Translated and summarized content.
     """
-    prompt = f"The article titled {news.title} is provided below. Translate into Korean. Should be formal since it is news. Summarize in 4 sentences, eliminating any irrelevant details. Don't use dash '-'. Should be less than 290 characters in total:\n\n{news.content}"
+    prompt = f"The article titled {title} is provided below. Translate into Korean. Should be formal since it is news. Summarize in 4 sentences, eliminating any irrelevant details. Don't use dash '-'. Should be less than 290 characters in total:\n\n{content}"
     while True:
         updated_news = get_gpt4_response(prompt)
         if len(updated_news) <= 290 and len(updated_news.split(". ")) == 4:
-            break
+            return updated_news
         print("The length of the text exceeds 290 characters. Please try again.")
-    return updated_news
 
 
 def get_new_title(title, updated_news):
@@ -51,16 +50,25 @@ def get_new_title(title, updated_news):
     select_query = "SELECT new_title FROM svt_news WHERE title = ?;"
     new_title = execute_query(select_query, (title,))
 
-    if new_title:
-        new_title = new_title[0][0]
-
-    if not new_title:
+    if new_title and new_title[0][0]:
+        print(f"New title:{new_title[0][0]} already exists in the database.")
+        return new_title[0][0]
+    while True:
         prompt = f"Generate a title of the below news in Korean in one sentence. Should be less than 18 characters. Don't use special characters that are not allowed in file name:\n\n{updated_news}"
         new_title = get_gpt4_response(prompt)
         execute_query("UPDATE svt_news SET new_title = ? WHERE title = ?", (new_title, title))
+        if not contains_specific_special_characters(new_title):
+            return new_title
 
-    return new_title
-
+def contains_specific_special_characters(text):
+    # Define the special characters to check for
+    special_characters = "#!@%-'_&$^*()+=:;?/"
+    
+    # Check if any of these special characters are in the text
+    for char in special_characters:
+        if char in text:
+            return True
+    return False
 
 def split_text(text):
     """
@@ -98,8 +106,7 @@ def read_unprocessed_news():
     list: List of unprocessed news objects.
     """
     query = "SELECT title, url FROM svt_news WHERE status IS NULL;"
-    #query = "SELECT title, url FROM svt_news WHERE date = '2024-06-05';"
-    return [News(title, "", url) for title, url in execute_query(query)]
+    return [(title, url) for title, url in execute_query(query)]
 
 def main():
     """
@@ -114,13 +121,12 @@ def main():
             add_news(news.title, news.link)
             print(f"{news.title} added")
 
-    for news in read_unprocessed_news():
-        print(f"Start to process news({news.title})")
+    for title, url in read_unprocessed_news():
+        print(f"Start to process news({title})")
 
-        raw_content = get_content(news.link)
-        news.content = raw_content
-        updated_content = translate_and_summarize(news)
-        new_title = get_new_title(news.title, updated_content).replace('"', "")
+        raw_content = get_content(url)
+        updated_content = translate_and_summarize(title, raw_content)
+        new_title = get_new_title(title, updated_content)
 
         print("new_title: ", new_title)
         print("updated_news: ", updated_content)
@@ -131,8 +137,8 @@ def main():
                 print("Progressing...")
                 break
             if user_input.lower() == 'r':
-                updated_content = translate_and_summarize(news)
-                new_title = get_new_title(news.title, updated_content).replace('"', "")
+                updated_content = translate_and_summarize(title, raw_content)
+                new_title = get_new_title(title, updated_content)
                 print("new_title: ", new_title)
                 print("updated_news: ", updated_content)
             else:
@@ -182,7 +188,7 @@ def main():
         merged_clip = concatenate_videoclips(final_clips)
         merged_clip.write_videofile(os.path.join(video_output_dir, f"{new_title}.mp4"), fps=24)
 
-        process_news(news.title)
+        set_status_to_video_generated(news.title)
 
 if __name__ == "__main__":
     main()
