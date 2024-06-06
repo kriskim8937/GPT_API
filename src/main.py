@@ -188,7 +188,7 @@ def main():
         merged_clip = concatenate_videoclips(final_clips)
         merged_clip.write_videofile(os.path.join(video_output_dir, f"{new_title}.mp4"), fps=24)
 
-        set_status_to_video_generated(news.title)
+        set_status_to_video_generated(new_title)
 
 if __name__ == "__main__":
     main()

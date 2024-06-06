@@ -62,16 +62,16 @@ def execute_query(query, param=None):
     return result  # Return the result
 
 
-def set_status_to_video_generated(title):
+def set_status_to_video_generated(new_title):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE svt_news SET status = 'video_generated' WHERE title = ?", (title,))
+    cursor.execute("UPDATE svt_news SET status = 'video_generated' WHERE new_title = ?", (new_title,))
     conn.commit()
     conn.close()
 
-def set_status_to_video_uploaded(title):
+def set_status_to_video_uploaded(new_title):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE svt_news SET status = 'video_uploaded' WHERE title = ?", (title,))
+    cursor.execute("UPDATE svt_news SET status = 'video_uploaded' WHERE new_title = ?", (new_title,))
     conn.commit()
     conn.close()
