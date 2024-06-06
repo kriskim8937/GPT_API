@@ -28,8 +28,13 @@ def translate_and_summarize(news):
     Returns:
     str: Translated and summarized content.
     """
-    prompt = f"The article titled {news.title} is provided below. Translate into Korean with honorifics and summarize in 5 sentences, eliminating any irrelevant details. Don't use dash '-'. Should be less than 290 characters in total:\n\n{news.content}"
-    return get_gpt4_response(prompt)
+    prompt = f"The article titled {news.title} is provided below. Translate into Korean. Should be formal since it is news. Summarize in 4 sentences, eliminating any irrelevant details. Don't use dash '-'. Should be less than 290 characters in total:\n\n{news.content}"
+    while True:
+        updated_news = get_gpt4_response(prompt)
+        if len(updated_news) <= 290 and len(updated_news.split(". ")) == 4:
+            break
+        print("The length of the text exceeds 290 characters. Please try again.")
+    return updated_news
 
 
 def get_new_title(title, updated_news):
@@ -92,10 +97,9 @@ def read_unprocessed_news():
     Returns:
     list: List of unprocessed news objects.
     """
-    #query = "SELECT title, url FROM svt_news WHERE status IS NULL;"
-    query = "SELECT title, url FROM svt_news WHERE date = '2024-06-05';"
+    query = "SELECT title, url FROM svt_news WHERE status IS NULL;"
+    #query = "SELECT title, url FROM svt_news WHERE date = '2024-06-05';"
     return [News(title, "", url) for title, url in execute_query(query)]
-
 
 def main():
     """
@@ -120,11 +124,22 @@ def main():
 
         print("new_title: ", new_title)
         print("updated_news: ", updated_content)
-        user_input = input("Do you want to progress? (y/n): ")
-        if user_input.lower() == 'y':
-            print("Progressing...")
-        else:
-            print("Continuing...")
+        while True :
+            should_skip = False
+            user_input = input("Do you want to generate video based on content? (y/r/else(skip)): ")
+            if user_input.lower() == 'y':
+                print("Progressing...")
+                break
+            if user_input.lower() == 'r':
+                updated_content = translate_and_summarize(news)
+                new_title = get_new_title(news.title, updated_content).replace('"', "")
+                print("new_title: ", new_title)
+                print("updated_news: ", updated_content)
+            else:
+                print("Skipping...")
+                should_skip = True
+                break
+        if should_skip:
             continue
         sentences = updated_content.split(". ")
         dall_e_3_client = DallE3()
