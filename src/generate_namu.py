@@ -5,6 +5,7 @@ from tts_1 import generate_audio
 from svt_parser import get_news_titles_and_urls, get_content
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, TextClip, CompositeVideoClip
 from models import news_exists, add_news, set_status_to_video_generated, execute_query
+from namu_hot_now_parser import get_namu_hot_now_posts
 
 
 SPECIAL_CHARACTERS = "#!@%-'_&$^*()+=:;?/"
@@ -49,8 +50,8 @@ def split_text(text):
     return text[:split_index], text[split_index+1:]
 
 
-def read_unprocessed_news():
-    query = "SELECT title, url FROM svt_news WHERE status IS NULL;"
+def read_unprocessed_news(table):
+    query = f"SELECT title, url FROM {table} WHERE status IS NULL;"
     return [(title, url) for title, url in execute_query(query)]
 
 
@@ -110,19 +111,18 @@ def generate_video_clips(new_title, sentences):
 
     return final_clips
 
-table = "svt_news"
-
+table_name = "namu_hot_posts"
 def main():
-    news_list = get_news_titles_and_urls()
+    namu_hot_now_posts = get_namu_hot_now_posts()
 
-    for news in news_list:
-        if news_exists(table, news.title):
-            print(f"This news({news.title}) already registered in db")
+    for namu_hot_now_post in namu_hot_now_posts:
+        if news_exists(table_name, namu_hot_now_post.title):
+            print(f"This news({namu_hot_now_post.title}) already registered in db")
         else:
-            add_news(table, news.title, news.link)
-            print(f"{news.title} added")
+            add_news(table_name, namu_hot_now_post.title, namu_hot_now_post.url)
+            print(f"{namu_hot_now_post.title} added")
 
-    for title, url in read_unprocessed_news():
+    for title, url in read_unprocessed_news(table_name):
         print(f"Start to process news({title})")
 
         try:
@@ -135,13 +135,12 @@ def main():
                 continue
 
             sentences = updated_content.split(". ")
-
             create_directories([AUDIO_OUTPUT_DIR, IMAGE_OUTPUT_DIR, VIDEO_OUTPUT_DIR])
             final_clips = generate_video_clips(new_title, sentences)
+
             merged_clip = concatenate_videoclips(final_clips)
             merged_clip.write_videofile(os.path.join(VIDEO_OUTPUT_DIR, f"{new_title}.mp4"), fps=24)
-
-            set_status_to_video_generated(new_title)
+            #set_status_to_video_generated(new_title)
 
         except Exception as e:
             print(f"An error occurred while processing news ({title}): {e}")

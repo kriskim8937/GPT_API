@@ -39,7 +39,7 @@ def get_non_sensitive_prompt(prompt):
 class DallE3:
     def get_image_data(self, input_text):
         self.conversation_history = []
-        self.conversation_history.append(f"You: {input_text}. Don't put numbers on the image.")
+        self.conversation_history.append(f"You: {input_text}. Don't put any numbers or texts on the image.")
         prompt = "\n".join(self.conversation_history)
         response = get_dall_e_3_response(prompt)
         while not response:

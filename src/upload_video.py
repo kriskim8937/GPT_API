@@ -1,6 +1,6 @@
 import googleapiclient.discovery
 import googleapiclient.errors
-from models import execute_query, set_status_to_video_uploaded
+from models import execute_query, set_status_to_video_uploaded, set_video_id
 from auth import get_authenticated_service
 
 # Define the scopes required for the application
@@ -61,6 +61,7 @@ def main():
         privacy_status = "public"  # or 'private', 'unlisted'
         video_id = upload_video(youtube, video_file, new_title, description, tags, category_id, privacy_status)
         set_status_to_video_uploaded(new_title)
+        set_video_id(new_title, video_id)
         print(f"Uploaded video ID: {video_id}")
 
 if __name__ == "__main__":
