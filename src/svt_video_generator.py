@@ -10,6 +10,7 @@ class SvtVideoGenerator(VideoGenerator):
         super().__init__(contents_parser)
         self.table_name = "svt_news"
         self.num_sentences = 4
+        self.num_images = 2
 
     def get_new_title(self, title, updated_news):
         select_query = "SELECT new_title FROM svt_news WHERE title = ?;"

@@ -6,6 +6,7 @@ class NamuVideoGenerator(VideoGenerator):
         super().__init__(contents_parser)
         self.table_name = "namu_hot_posts"
         self.num_sentences = 3
+        self.num_images = 2
 
     def get_new_title(self, title, updated_news):
         return title

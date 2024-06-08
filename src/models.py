@@ -90,3 +90,10 @@ def get_uploaded_videos():
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+def set_status_to_commented(video_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE svt_news SET status = 'video_commented' WHERE video_id = ?", (video_id,))
+    conn.commit()
+    conn.close()

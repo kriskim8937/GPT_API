@@ -5,7 +5,7 @@
 # https://developers.google.com/explorer-help/code-samples#python
 
 from auth import get_authenticated_service
-from models import get_uploaded_videos
+from models import get_uploaded_videos, set_status_to_commented
 
 scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 
@@ -20,15 +20,15 @@ def main():
                 "videoId": video_id,
                 "topLevelComment": {
                   "snippet": {
-                    "textOriginal": f"구독 감사합니다! 😊 원본 기사는 다음 링크를 참조해 주세요.\n\n{url}"
+                    "textOriginal": f"구독 감사합니다! 😊 원본 기사는 다음 링크를 참조해 주세요.\n\n{url}" 
                   }
                 }
               }
             }
         )
         response = request.execute()
-
         print(response)
+        set_status_to_commented(video_id)
 
 if __name__ == "__main__":
     main()

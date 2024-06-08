@@ -17,42 +17,45 @@ def save_image(image_data: str, output_path: str) -> None:
     print(f"Image saved to {output_path}")
 
 
-def get_dall_e_3_response(prompt: str) -> Image:
+def get_dall_e_3_response(prompt: str, num_images: int) -> Image:
+    images = []
     try:
-        response = client.images.generate(
-            model="dall-e-3",
-            prompt=prompt,
-            n=1,
-            quality="standard",
-            size="1024x1024",
-            response_format="b64_json",
-        )
-        return response.data[0]
+        for i in range(num_images):
+            response = client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                n=1,
+                quality="standard",
+                size="1024x1024",
+                response_format="b64_json",
+            )
+            images.append(response.data[0])
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+    return images
 
 def get_non_sensitive_prompt(prompt):
     prompt = "Remove sensitive words from below sentence:\n\n" + prompt
     return get_gpt4_response(prompt)
 
 class DallE3:
-    def get_image_data(self, input_text):
+    def get_image_data(self, input_text, num_images):
         self.conversation_history = []
         self.conversation_history.append(f"You: {input_text}. Don't put any numbers or texts on the image.")
         prompt = "\n".join(self.conversation_history)
-        response = get_dall_e_3_response(prompt)
-        while not response:
+        images = get_dall_e_3_response(prompt, num_images)
+        while not images:
             input_text = get_non_sensitive_prompt(input_text)
             print("non-sensitive-prompt: ", input_text)
             self.conversation_history = self.conversation_history[:-1]
             self.conversation_history.append(f"You: {input_text}")
             prompt = "\n".join(self.conversation_history)
             print(prompt)
-            response = get_dall_e_3_response(prompt)
-        self.conversation_history.append(f"GPT-4: {response.revised_prompt}")
-        print(f"GPT-4: {response.revised_prompt}")
-        return response
+            images = get_dall_e_3_response(prompt, num_images)
+        self.conversation_history.append(f"GPT-4: {images[0].revised_prompt}")
+        print(f"GPT-4: {images[0].revised_prompt}")
+        return images
 
 def main() -> None:
     conversation_history = []

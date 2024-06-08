@@ -3,7 +3,7 @@ from gpt_4 import get_gpt4_response
 from dall_e_3 import DallE3, save_image
 from tts_1 import generate_audio
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, TextClip, CompositeVideoClip
-from models import news_exists, add_news, execute_query
+from models import news_exists, add_news, execute_query, set_status_to_video_generated
 import requests
 from bs4 import BeautifulSoup
 
@@ -94,22 +94,26 @@ class VideoGenerator:
         for directory in directories:
             os.makedirs(directory, exist_ok=True)
 
-    def generate_video_clips(self, new_title, sentences):
+    def save_images(self, new_title, content):
+        image_paths = []
         dall_e_3_client = DallE3()
-        final_clips = []
+        images = dall_e_3_client.get_image_data(content, self.num_images)
+        for idx, image in enumerate(images):
+            image_data = image.b64_json
+            image_output_path = os.path.join(self.IMAGE_OUTPUT_DIR, f"{new_title}_{idx}.png")
+            save_image(image_data, image_output_path)
+            image_paths.append(image_output_path)
+        return image_paths
 
-        for idx, sentence in enumerate(sentences):
+    def generate_video_clips(self, new_title, updated_content):
+        final_clips = []
+        image_paths = self.save_images(new_title, updated_content)
+        for idx, sentence in enumerate(updated_content.split(". ")):
             audio_output_path = os.path.join(self.AUDIO_OUTPUT_DIR, f"{new_title}_{idx}.mp3")
             generate_audio(sentence, audio_output_path)
 
-            image_output_path = os.path.join(self.IMAGE_OUTPUT_DIR, f"{new_title}_{idx}.png")
-            if not os.path.exists(image_output_path):
-                response = dall_e_3_client.get_image_data(sentence)
-                image_data = response.b64_json
-                save_image(image_data, image_output_path)
-
             audio_clip = AudioFileClip(audio_output_path)
-            image_clip = ImageClip(image_output_path).set_duration(audio_clip.duration)
+            image_clip = ImageClip(image_paths[idx % len(image_paths)]).set_duration(audio_clip.duration)
 
             title_clip = TextClip(new_title, fontsize=60, color="white", bg_color="black", font="Malgun-Gothic-Bold", size=(1024, 100)).set_duration(audio_clip.duration).set_position(("center", "top"))
 
@@ -146,14 +150,12 @@ class VideoGenerator:
 
                 if choice is None:
                     continue
-
-                sentences = updated_content.split(". ")
                 self.create_directories([self.AUDIO_OUTPUT_DIR, self.IMAGE_OUTPUT_DIR, self.VIDEO_OUTPUT_DIR])
-                final_clips = self.generate_video_clips(new_title, sentences)
+                final_clips = self.generate_video_clips(new_title, updated_content)
 
                 merged_clip = concatenate_videoclips(final_clips)
                 merged_clip.write_videofile(os.path.join(self.VIDEO_OUTPUT_DIR, f"{new_title}.mp4"), fps=24)
-                #set_status_to_video_generated(new_title)
+                set_status_to_video_generated(new_title)
 
             except Exception as e:
                 print(f"An error occurred while processing news ({title}): {e}")
