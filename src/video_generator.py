@@ -2,9 +2,10 @@ import os
 from gpt_4 import get_gpt4_response
 from dall_e_3 import DallE3, save_image
 from tts_1 import generate_audio
-from svt_parser import get_content
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, TextClip, CompositeVideoClip
 from models import news_exists, add_news, execute_query
+import requests
+from bs4 import BeautifulSoup
 
 class VideoGenerator:
     SPECIAL_CHARACTERS = "#!@%-'_&$^*()+=:;?/"
@@ -54,9 +55,25 @@ class VideoGenerator:
     def read_unprocessed_news(self, table):
         query = f"SELECT title, url FROM {table} WHERE status IS NULL;"
         return [(title, url) for title, url in execute_query(query)]
+    
+    def get_content(self, news_url):
+        response = requests.get(news_url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        # Get the contents (e.g., paragraphs, h2, and li) in order
+        contents = []
+        for tag in soup.find_all(["p", "h2", "li"]):
+            if tag.name == "p":
+                contents.append(tag.text)
+            elif tag.name == "h2":
+                contents.append(tag.text)
+            elif tag.name == "li":
+                contents.append(tag.text)
+        # Combine all the contents into a single string
+        content = "\n".join(contents)
+        return content
 
     def process_news_content(self, title, url):
-        raw_content = get_content(url)
+        raw_content = self.get_content(url)
         updated_content = self.translate_and_summarize(title, raw_content)
         new_title = self.get_new_title(title, updated_content)
         print("new_title: ", new_title)
