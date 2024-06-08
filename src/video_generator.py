@@ -5,7 +5,6 @@ from tts_1 import generate_audio
 from svt_parser import get_content
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, TextClip, CompositeVideoClip
 from models import news_exists, add_news, execute_query
-from namu_hot_now_parser import get_namu_hot_now_posts
 
 class VideoGenerator:
     SPECIAL_CHARACTERS = "#!@%-'_&$^*()+=:;?/"
@@ -13,10 +12,11 @@ class VideoGenerator:
     IMAGE_OUTPUT_DIR = "./outputs/images/"
     VIDEO_OUTPUT_DIR = "./outputs/videos/"
 
-    def __init__(self):
+    def __init__(self, contents_parser):
         self.num_sentences = 4
         self.max_content_length = 290
         self.table_name = "should_be_overridden_in_child_class"
+        self.contents_parser = contents_parser
 
     def translate_and_summarize(self, title, content):
         prompt = f"The article titled {title} is provided below. Translate into Korean. Should be formal since it is news. Summarize in {self.num_sentences} sentences, eliminating any irrelevant details. Don't use dash '-’. Should be less than {self.max_content_length} characters in total:\n\n{content}"
@@ -109,14 +109,14 @@ class VideoGenerator:
         return final_clips
 
     def generate_video(self):
-        namu_hot_now_posts = get_namu_hot_now_posts()
+        contents = self.contents_parser.get_contents()
 
-        for namu_hot_now_post in namu_hot_now_posts:
-            if news_exists(self.table_name, namu_hot_now_post.title):
-                print(f"This news({namu_hot_now_post.title}) already registered in db")
+        for content in contents:
+            if news_exists(self.table_name, content.title):
+                print(f"This news({content.title}) already registered in db")
             else:
-                add_news(self.table_name, namu_hot_now_post.title, namu_hot_now_post.url)
-                print(f"{namu_hot_now_post.title} added")
+                add_news(self.table_name, content.title, content.url)
+                print(f"{content.title} added")
 
         for title, url in self.read_unprocessed_news(self.table_name):
             print(f"Start to process news({title})")
