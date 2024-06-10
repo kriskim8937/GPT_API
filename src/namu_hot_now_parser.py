@@ -15,6 +15,9 @@ class NamuHotNowPost:
 
 class NamuHotNowParser:
     base_url = 'https://arca.live/b/namuhotnow'
+    def __init__(self, minimum_likes) -> None:
+        self.minimum_likes = minimum_likes
+
     def fetch_page(self, url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -38,7 +41,7 @@ class NamuHotNowParser:
                 comment_count = link.find('span', class_='comment-count').text
                 likes = link.find('span', class_='vcol col-rate').text
                 datetime = link.find('time')['datetime']
-                if  int(likes) > 30:
+                if  int(likes) > self.minimum_likes:
                     links.append(NamuHotNowPost(title=title, likes=int(likes), comment_count=int(re.search(r'\d+', comment_count).group()), url=full_url, datetime=datetime))
         return links
 
@@ -58,9 +61,6 @@ class NamuHotNowParser:
                     article_content = article_body.find('div', class_='fr-view article-content')  # Finding the div with class 'fr-view article-content'
                     # Extracting the text content of the article
                     article_text = article_content.get_text().strip()
-                    print(article_text)
-                    # Sleep to avoid overwhelming the server0
-                    time.sleep(1)
                     namu_hot_now_post.content = article_text
         return namu_hot_now_posts 
 

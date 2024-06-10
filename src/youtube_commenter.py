@@ -10,7 +10,7 @@ from models import get_uploaded_videos, set_status_to_commented
 scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 
 def main():
-    for video_id, url in get_uploaded_videos():
+    for video_id, url in get_uploaded_videos("svt_news"):
         print(video_id, url)
         youtube = get_authenticated_service(scopes)
         request = youtube.commentThreads().insert(
@@ -28,7 +28,7 @@ def main():
         )
         response = request.execute()
         print(response)
-        set_status_to_commented(video_id)
+        set_status_to_commented("svt_news", video_id)
 
 if __name__ == "__main__":
     main()

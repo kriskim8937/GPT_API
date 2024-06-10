@@ -3,7 +3,7 @@ from gpt_4 import get_gpt4_response
 from dall_e_3 import DallE3, save_image
 from tts_1 import generate_audio
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, TextClip, CompositeVideoClip
-from models import news_exists, add_news, execute_query, set_status_to_video_generated
+from models import news_exists, add_news, execute_query, set_status_to_video_generated, set_status_to_skipped
 import requests
 from bs4 import BeautifulSoup
 
@@ -31,17 +31,7 @@ class VideoGenerator:
         return any(char in self.SPECIAL_CHARACTERS for char in text)
 
     def get_new_title(self, title, updated_news):
-        select_query = f"SELECT new_title FROM {self.table_name} WHERE title = ?;"
-        new_title = execute_query(select_query, (title,))
-        if new_title and new_title[0][0]:
-            print(f"New title:{new_title[0][0]} already exists in the database.")
-            return new_title[0][0]
-        while True:
-            prompt = f"Generate a title of the below news in Korean in one sentence. Should be less than 18 characters. Don't use special characters that are not allowed in file name:\n\n{updated_news}"
-            new_title = get_gpt4_response(prompt)
-            if not self.contains_specific_special_characters(new_title):
-                execute_query(f"UPDATE {self.table_name} SET new_title = ? WHERE title = ?", (new_title, title))
-                return new_title
+        print("should be overridden in child class")
 
     def split_text(self, text):
         middle_index = len(text) // 2
@@ -76,17 +66,21 @@ class VideoGenerator:
         raw_content = self.get_content(url)
         updated_content = self.translate_and_summarize(title, raw_content)
         new_title = self.get_new_title(title, updated_content)
+        execute_query(f"UPDATE {self.table_name} SET new_title = ? WHERE title = ?", (new_title, title))
         print("new_title: ", new_title)
         print("updated_news: ", updated_content)
         return new_title, updated_content
 
-    def should_generate_video(self):
+    def should_generate_video(self, new_title):
         while True:
             user_input = input("Do you want to generate video based on content? (y/r/else(skip)): ")
             if user_input.lower() == 'y':
                 return True
             if user_input.lower() == 'r':
                 return False
+            if user_input.lower() == 'd':
+                set_status_to_skipped(self.table_name, new_title)
+                return None
             print("Skipping...")
             return None
 
@@ -145,7 +139,7 @@ class VideoGenerator:
             try:
                 new_title, updated_content = self.process_news_content(title, url)
 
-                while (choice := self.should_generate_video()) is False:
+                while (choice := self.should_generate_video(new_title)) is False:
                     new_title, updated_content = self.process_news_content(title, url)
 
                 if choice is None:

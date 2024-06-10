@@ -4,6 +4,7 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 import google.auth.transport.requests
+from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 
 # Define the scopes required for the application
@@ -15,8 +16,10 @@ def get_authenticated_service(scopes=SCOPES):
     credentials = None
     # Check if credentials file exists
     if os.path.exists(CREDENTIALS_FILE):
+
         with open(CREDENTIALS_FILE, 'r') as token:
             credentials = Credentials.from_authorized_user_info(json.load(token), scopes)
+
 
     # If there are no valid credentials, let the user log in
     if not credentials or not credentials.valid:

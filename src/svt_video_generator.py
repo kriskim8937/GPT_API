@@ -22,7 +22,6 @@ class SvtVideoGenerator(VideoGenerator):
             prompt = f"Generate a title of the below news in Korean in one sentence. Should be less than 18 characters. Don't use special characters that are not allowed in file name:\n\n{updated_news}"
             new_title = get_gpt4_response(prompt)
             if not contains_specific_special_characters(new_title):
-                execute_query("UPDATE svt_news SET new_title = ? WHERE title = ?", (new_title, title))
                 return new_title
 
 
