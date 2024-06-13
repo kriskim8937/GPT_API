@@ -149,7 +149,7 @@ class VideoGenerator:
 
                 merged_clip = concatenate_videoclips(final_clips)
                 merged_clip.write_videofile(os.path.join(self.VIDEO_OUTPUT_DIR, f"{new_title}.mp4"), fps=24)
-                set_status_to_video_generated(new_title)
+                set_status_to_video_generated(self.table_name, new_title)
 
             except Exception as e:
                 print(f"An error occurred while processing news ({title}): {e}")

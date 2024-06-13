@@ -19,13 +19,13 @@ class NamuVideoGenerator(VideoGenerator):
             print(f"New title:{new_title[0][0]} already exists in the database.")
             return new_title[0][0]
         while True:
-            prompt = f"Generate a title of the below news in English in one sentence. Should be less than 18 characters. Don't use special characters that are not allowed in file name:\n\n{updated_news}"
+            prompt = f"Generate a title of the below news in Korean in one sentence. Should be less than 18 characters. Don't use special characters that are not allowed in file name:\n\n{updated_news}"
             new_title = get_gpt4_response(prompt)
             if not contains_specific_special_characters(new_title):
                 return new_title
     
     def translate_and_summarize(self, title, content):
-        prompt = f"The article titled {title} is provided below. Translate into English. Should be formal since it is news. Summarize in {self.num_sentences} sentences, eliminating any irrelevant details. Don't use dash '-’. The Generated article The sentence must not exceed {self.max_content_length} characters.:\n\n{content}"
+        prompt = f"The article titled {title} is provided below. Translate into Korean. Should be formal since it is news. Summarize in {self.num_sentences} sentences, eliminating any irrelevant details. Don't use dash '-’. The Generated article The sentence must not exceed {self.max_content_length} characters.:\n\n{content}"
         while True:
             updated_news = get_gpt4_response(prompt)
             if len(updated_news) <= self.max_content_length and len(updated_news.split(". ")) <= self.num_sentences:

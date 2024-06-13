@@ -3,6 +3,7 @@ requests
 openai
 ruff
 bs4
+dotenv
 markdown
 google-auth
 google-auth-oauthlib

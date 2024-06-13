@@ -12,7 +12,7 @@ def generate_audio(script, output_path):
     # Ensure the output directory exists
     response = client.audio.speech.create(
         model="tts-1",
-        voice="alloy",
+        voice="nova",
         input=script,
     )
     response.stream_to_file(output_path)

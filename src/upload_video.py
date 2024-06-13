@@ -60,8 +60,8 @@ def main():
         category_id = "22"  # 22 is the category ID for "People & Blogs"
         privacy_status = "public"  # or 'private', 'unlisted'
         video_id = upload_video(youtube, video_file, new_title, description, tags, category_id, privacy_status)
-        set_status_to_video_uploaded(new_title)
-        set_video_id(new_title, video_id)
+        set_status_to_video_uploaded("svt_news", new_title)
+        set_video_id("svt_news", new_title, video_id)
         print(f"Uploaded video ID: {video_id}")
 
 if __name__ == "__main__":

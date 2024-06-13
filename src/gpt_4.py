@@ -59,6 +59,8 @@ def main():
 
         update_conversation_history(conversation_history, user_input, gpt4_response)
         print(f"GPT-4: {gpt4_response}")
+        with open("output.md", 'w') as file:
+            file.write(gpt4_response)
 
 
 if __name__ == "__main__":
