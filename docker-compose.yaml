@@ -36,6 +36,7 @@
 #
 # Feel free to modify this file to suit your needs.
 ---
+version: '3'
 x-airflow-common:
   &airflow-common
   image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.0.2}
@@ -54,7 +55,14 @@ x-airflow-common:
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
     - ./reports:/opt/airflow/reports
-    - ./airflow.cfg:/usr/local/airflow/airflow.cfg
+    - ./airflow.cfg:/usr/local/airflow/airflow.cfg  
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  depends_on:
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+
 services:
   postgres:
     image: postgres:13
