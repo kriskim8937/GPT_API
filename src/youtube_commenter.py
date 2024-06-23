@@ -4,8 +4,8 @@
 # See instructions for running these code samples locally:
 # https://developers.google.com/explorer-help/code-samples#python
 
-from auth import get_authenticated_service
-from models import get_uploaded_videos, set_status_to_commented
+from src.auth import get_authenticated_service
+from src.models import get_uploaded_videos, set_status_to_commented
 
 scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 

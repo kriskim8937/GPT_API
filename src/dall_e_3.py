@@ -1,10 +1,9 @@
 from openai.types.images_response import Image
 from openai import OpenAI
 import base64
-import os
-from gpt_4 import get_gpt4_response
+from src.gpt_4 import get_gpt4_response
 from dotenv import load_dotenv
-from common import ensure_directory_exists, get_current_datetime_str
+from src.common import ensure_directory_exists, get_current_datetime_str
 
 load_dotenv()
 client = OpenAI()

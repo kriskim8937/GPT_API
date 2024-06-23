@@ -1,9 +1,13 @@
 import sqlite3
-from config import DATABASE_PATH
+from src.config import DATABASE_PATH
 
 
 def get_connection():
-    conn = sqlite3.connect(DATABASE_PATH)
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+    except sqlite3.Error as e:
+        print(e)
+        return None
     return conn
 
 

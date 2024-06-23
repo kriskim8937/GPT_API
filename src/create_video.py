@@ -1,5 +1,5 @@
 from moviepy.editor import ImageSequenceClip, AudioFileClip
-from common import get_current_datetime_str
+from src.common import get_current_datetime_str
 
 # List of image file paths
 input_path = "./outputs/images/"

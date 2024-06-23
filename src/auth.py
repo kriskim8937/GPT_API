@@ -4,7 +4,6 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 import google.auth.transport.requests
-from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 
 # Define the scopes required for the application

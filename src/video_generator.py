@@ -1,9 +1,9 @@
 import os
-from gpt_4 import get_gpt4_response
-from dall_e_3 import DallE3, save_image
-from tts_1 import generate_audio
+from src.gpt_4 import get_gpt4_response
+from src.dall_e_3 import DallE3, save_image
+from src.tts_1 import generate_audio
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, TextClip, CompositeVideoClip
-from models import news_exists, add_news, execute_query, set_status_to_video_generated, set_status_to_skipped
+from src.models import news_exists, add_news, execute_query, set_status_to_video_generated, set_status_to_skipped
 import requests
 from bs4 import BeautifulSoup
 
@@ -123,9 +123,8 @@ class VideoGenerator:
 
         return final_clips
 
-    def generate_video(self):
+    def crawl_contents(self):
         contents = self.contents_parser.get_contents()
-
         for content in contents:
             if news_exists(self.table_name, content.title):
                 print(f"This news({content.title}) already registered in db")
@@ -133,6 +132,7 @@ class VideoGenerator:
                 add_news(self.table_name, content.title, content.url)
                 print(f"{content.title} added")
 
+    def generate_video(self):
         for title, url in self.read_unprocessed_news(self.table_name):
             print(f"Start to process news({title})")
 

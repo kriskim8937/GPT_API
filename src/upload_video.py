@@ -1,7 +1,7 @@
 import googleapiclient.discovery
 import googleapiclient.errors
-from models import execute_query, set_status_to_video_uploaded, set_video_id
-from auth import get_authenticated_service
+from src.models import execute_query, set_status_to_video_uploaded, set_video_id
+from src.auth import get_authenticated_service
 
 # Define the scopes required for the application
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]

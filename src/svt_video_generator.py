@@ -1,9 +1,11 @@
-from video_generator import VideoGenerator
-from namu_hot_now_parser import NamuHotNowParser
-from gpt_4 import get_gpt4_response
-from common import contains_specific_special_characters
-from models import execute_query
-from svt_parser import SvtParser
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src.video_generator import VideoGenerator
+from src.gpt_4 import get_gpt4_response
+from src.common import contains_specific_special_characters
+from src.models import execute_query
+from src.svt_parser import SvtParser
 
 class SvtVideoGenerator(VideoGenerator):
     def __init__(self, contents_parser):
@@ -25,4 +27,6 @@ class SvtVideoGenerator(VideoGenerator):
                 return new_title
 
 
-SvtVideoGenerator(SvtParser()).generate_video()
+svt_video_generator = SvtVideoGenerator(SvtParser())
+svt_video_generator.crawl_contents()
+svt_video_generator.generate_video()

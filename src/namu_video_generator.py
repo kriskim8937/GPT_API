@@ -1,8 +1,8 @@
-from video_generator import VideoGenerator
-from namu_hot_now_parser import NamuHotNowParser
-from gpt_4 import get_gpt4_response
-from models import execute_query
-from common import contains_specific_special_characters
+from src.video_generator import VideoGenerator
+from src.namu_hot_now_parser import NamuHotNowParser
+from src.gpt_4 import get_gpt4_response
+from src.models import execute_query
+from src.common import contains_specific_special_characters
 
 class NamuVideoGenerator(VideoGenerator):
     def __init__(self, contents_parser):
@@ -33,4 +33,7 @@ class NamuVideoGenerator(VideoGenerator):
             print(f"The length of the text:{len(updated_news)} exceeds {self.max_content_length} characters. Please try again.")
 
 
-NamuVideoGenerator(NamuHotNowParser(minimum_likes=30)).generate_video()
+# svt_video_generator = SvtVideoGenerator(SvtParser())
+# svt_video_generator.crawl_contents()
+# svt_video_generator.generate_video()
+

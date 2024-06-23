@@ -1,4 +1,4 @@
-from auth import get_authenticated_service
+from src.auth import get_authenticated_service
 
 def main():
     youtube = get_authenticated_service()
