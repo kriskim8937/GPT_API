@@ -39,7 +39,8 @@
 version: '3'
 x-airflow-common:
   &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.0.2}
+  image: ${AIRFLOW_IMAGE_NAME:-my_airflow_image}
+  build: .
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -50,12 +51,18 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
+    PYTHONPATH: "/opt/airflow:${PYTHONPATH}"
+  env_file:
+    - .env  # Specify the path to your .env file
   volumes:
+    - ./src:/opt/airflow/src
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
+    - ./data:/opt/airflow/data
+    - ./plugins:/opt/airflow/plugins
     - ./reports:/opt/airflow/reports
-    - ./airflow.cfg:/usr/local/airflow/airflow.cfg  
+    - ./airflow.cfg:/usr/local/airflow/airflow.cfg
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
     redis:
@@ -132,6 +139,18 @@ services:
       timeout: 10s
       retries: 5
     restart: always
-
+  flask-webapp:
+    image: python:3.8-slim
+    build:
+      context: ./flask-app
+    environment:
+      FLASK_APP: app.py
+    volumes:
+      - ./flask-app:/app
+    ports:
+      - 5000:5000
+    command: flask run --host=0.0.0.0 --port=5000
+    depends_on:
+      - airflow-webserver
 volumes:
   postgres-db-volume:
