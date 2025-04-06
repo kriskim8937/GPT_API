@@ -39,3 +39,25 @@ NewsCraftr is an automated pipeline that scrapes news articles, converts them in
 ```bash
 git clone https://github.com/yourusername/newscraftr.git
 cd newscraftr
+```
+## 🧠 How It Works
+1. Scraper fetches news content.
+2. GPT-4 summarizes and rewrites it as a script.
+3. DALL·E generates matching visuals.
+4. TTS Engine converts the script into speech.
+5. FFmpeg compiles audio and visuals into a video.
+6. YouTube API uploads the video with metadata.
+7. Airflow schedules and manages each stage of this pipeline.
+
+## 📸 Sample Output
+https://www.youtube.com/@sweden_news
+---
+## 🛣 Roadmap
+- Add subtitle generation
+- Improve voice emotion/delivery
+- Add support for TikTok / Shorts formats
+- Allow user-defined topics via UI
+---
+## 📜 License
+MIT License.
+---
